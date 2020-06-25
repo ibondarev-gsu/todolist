@@ -8,7 +8,7 @@ import org.springframework.context.annotation.*;
         SecurityApplicationConfig.class,
         ThymeleafApplicationConfig.class
 })
-@ComponentScan("com.epam.lab.*")
+@ComponentScan("com.todo.*")
 @PropertySource(value = {"classpath:application.properties"})
 public class RootApplicationConfig {
 }

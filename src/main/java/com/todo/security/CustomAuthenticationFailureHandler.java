@@ -2,6 +2,7 @@ package com.todo.security;
 
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.MessageSource;
+import org.springframework.security.authentication.AccountExpiredException;
 import org.springframework.security.authentication.DisabledException;
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.web.WebAttributes;
@@ -14,6 +15,7 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.util.Locale;
+import java.util.concurrent.atomic.AtomicReference;
 
 @Component("customAuthenticationFailureHandler")
 public class CustomAuthenticationFailureHandler extends SimpleUrlAuthenticationFailureHandler {
@@ -25,7 +27,6 @@ public class CustomAuthenticationFailureHandler extends SimpleUrlAuthenticationF
         this.messages = messages;
         this.localeResolver = localeResolver;
     }
-
 
     @Override
     public void onAuthenticationFailure(final HttpServletRequest request,
@@ -39,15 +40,15 @@ public class CustomAuthenticationFailureHandler extends SimpleUrlAuthenticationF
 
         final Locale locale = localeResolver.resolveLocale(request);
 
-        String errorMessage = messages.getMessage("message.badCredentials", null, locale);
+        AtomicReference<String> errorMessage = new AtomicReference<>(messages.getMessage("message.badCredentials", null, locale));
 
         if (exception.getClass().isAssignableFrom(DisabledException.class)) {
 
-            errorMessage = messages.getMessage("auth.message.disabled", null, locale);
+            errorMessage.set(messages.getMessage("auth.message.disabled", null, locale));
 
-        } else if (exception.getMessage().equalsIgnoreCase("User account has expired")) {
+        } else if (exception.getClass().isAssignableFrom(AccountExpiredException.class)) {
 
-            errorMessage = messages.getMessage("auth.message.expired", null, locale);
+            errorMessage.set(messages.getMessage("auth.message.expired", null, locale));
 
         }
 

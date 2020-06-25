@@ -21,7 +21,7 @@ import java.util.Properties;
 ////Enable annotation driven transaction management
 @EnableTransactionManagement
 ////Configure Spring Data JPA and set the base package of the repository interfaces
-@EnableJpaRepositories({"com.epam.lab.repository"})
+@EnableJpaRepositories({"com.todo.repository"})
 public class DataApplicationConfig {
 
     private static final Logger logger = LoggerFactory.getLogger(DataApplicationConfig.class);
@@ -52,7 +52,7 @@ public class DataApplicationConfig {
         LocalContainerEntityManagerFactoryBean entityManagerFactory = new LocalContainerEntityManagerFactoryBean();
 
         entityManagerFactory.setDataSource(dataSource());
-        entityManagerFactory.setPackagesToScan(new String[]{"com.epam.lab.model"});
+        entityManagerFactory.setPackagesToScan(new String[]{"com.todo.model"});
 
         JpaVendorAdapter vendorAdapter = new HibernateJpaVendorAdapter();
 

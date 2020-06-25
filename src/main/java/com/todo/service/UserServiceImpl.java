@@ -1,13 +1,15 @@
 package com.todo.service;
 
 import com.todo.dto.UserDto;
+import com.todo.exceptions.PasswordResetTokenNotFountException;
 import com.todo.exceptions.UserAlreadyExistException;
+import com.todo.exceptions.UserNotFoundException;
+import com.todo.exceptions.VerificationTokenNotFountException;
 import com.todo.model.PasswordResetToken;
 import com.todo.model.User;
 
 import com.todo.model.VerificationToken;
 import com.todo.repository.PasswordResetTokenRepository;
-import com.todo.repository.RoleRepository;
 import com.todo.repository.UserRepository;
 import com.todo.repository.VerificationTokenRepository;
 import com.todo.service.interfaces.IUserService;
@@ -16,8 +18,8 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDateTime;
 import java.util.Arrays;
-import java.util.Optional;
 
 @Service("userServiceImpl")
 @Transactional(readOnly = true)
@@ -25,24 +27,23 @@ import java.util.Optional;
 public class UserServiceImpl implements IUserService {
 
     private final UserRepository userRepository;
-    private final RoleRepository roleRepository;
     private final PasswordEncoder passwordEncoder;
     private final VerificationTokenRepository verificationTokenRepository;
     private final PasswordResetTokenRepository passwordResetTokenRepository;
 
     @Override
-    public Optional<User> findByUsername(String username) {
-        return userRepository.findByUsername(username);
+    public User findByUsername(String username) throws UserNotFoundException {
+        return userRepository.findByUsername(username).orElseThrow(UserNotFoundException::new);
     }
 
     @Override
     @Transactional
     public User registerNewUserAccount(final UserDto userDto) throws UserAlreadyExistException {
 
-        final String userName = userDto.getUsername();
+        final String email = userDto.getEmail();
 
-        if(findByUsername(userName).isPresent()){
-            throw new UserAlreadyExistException("There is an account with that username: " + userName);
+        if (userRepository.findByEmail(email).isPresent()){
+            throw new UserAlreadyExistException("There is an account with that email: " + email);
         }
 
         return userRepository.save(User.builder()
@@ -60,8 +61,7 @@ public class UserServiceImpl implements IUserService {
     @Override
     @Transactional
     public void createVerificationToken(final User user, final String token) {
-        VerificationToken verificationToken = new VerificationToken(token, user);
-        verificationTokenRepository.save(verificationToken);
+        verificationTokenRepository.save(new VerificationToken(user, token));
     }
 
     @Override
@@ -71,18 +71,23 @@ public class UserServiceImpl implements IUserService {
     }
 
     @Override
-    public User findUserByVerificationToken(final String verificationToken) {
-        return verificationTokenRepository.findByToken(verificationToken).getUser();
+    public User findUserByVerificationToken(final String verificationToken) throws VerificationTokenNotFountException {
+        return verificationTokenRepository
+                .findByToken(verificationToken)
+                .orElseThrow(VerificationTokenNotFountException::new)
+                .getUser();
     }
 
     @Override
-    public VerificationToken findVerificationTokenByToken(final String token) {
-        return verificationTokenRepository.findByToken(token);
+    public VerificationToken findVerificationTokenByToken(final String verificationToken) throws VerificationTokenNotFountException {
+        return verificationTokenRepository
+                .findByToken(verificationToken)
+                .orElseThrow(VerificationTokenNotFountException::new);
     }
 
     @Override
-    public Optional<PasswordResetToken> findPasswordResetTokenByToken(String token) {
-        return Optional.ofNullable(passwordResetTokenRepository.findByToken(token));
+    public PasswordResetToken findPasswordResetTokenByToken(String token) throws PasswordResetTokenNotFountException{
+        return passwordResetTokenRepository.findByToken(token).orElseThrow(PasswordResetTokenNotFountException::new);
     }
 
     @Override
@@ -99,11 +104,8 @@ public class UserServiceImpl implements IUserService {
     }
 
     @Override
-    public User findUserByEmail(String userEmail) {
-        return userRepository.findByEmail(userEmail);
+    public User findUserByEmail(String userEmail) throws UserNotFoundException {
+        return userRepository.findByEmail(userEmail).orElseThrow(UserNotFoundException::new);
     }
 
-    private boolean emailExist(final String username) {
-        return userRepository.findByUsername(username) != null;
-    }
 }

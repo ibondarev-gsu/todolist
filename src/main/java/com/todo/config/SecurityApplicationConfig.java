@@ -49,7 +49,7 @@ public class SecurityApplicationConfig extends WebSecurityConfigurerAdapter
                 // по которым будет определятся доступ к ресурсам и остальным данным
                 .authorizeRequests()
                     .antMatchers("/resources/**").permitAll()
-                    .antMatchers( "/login", "/registration", "/regitrationConfirm", "/badUser", "/forgotPassword").permitAll()
+                    .antMatchers( "/login", "/registration", "/registrationConfirm", "/badUser", "/forgotPassword").permitAll()
                 .anyRequest().authenticated()
                 .and()
 

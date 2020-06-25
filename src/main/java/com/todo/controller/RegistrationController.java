@@ -1,7 +1,10 @@
 package com.todo.controller;
 
 import com.todo.dto.UserDto;
+import com.todo.exceptions.PasswordResetTokenNotFountException;
 import com.todo.exceptions.UserAlreadyExistException;
+import com.todo.exceptions.UserNotFoundException;
+import com.todo.exceptions.VerificationTokenNotFountException;
 import com.todo.model.PasswordResetToken;
 import com.todo.model.User;
 import com.todo.model.VerificationToken;
@@ -19,12 +22,18 @@ import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.servlet.ModelAndView;
+import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.validation.Valid;
+import java.sql.Date;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.Calendar;
 import java.util.Locale;
 import java.util.Optional;
+import java.util.StringJoiner;
 
 @Slf4j
 @Controller
@@ -45,79 +54,81 @@ public class RegistrationController {
 
     @PostMapping(value = "/registration")
     public String registerUserAccount(@ModelAttribute("user") @Valid UserDto userDto, BindingResult bindingResult,
-                                      Model model, HttpServletRequest request){
+                                      ModelAndView model, HttpServletRequest request){
 
         if (bindingResult.hasErrors()) {
             return "registration";
         }
 
         try {
-            User registered = userService.registerNewUserAccount(userDto);
-            String appUrl = "http://"  + request.getServerName() + ":" + request.getServerPort() + request.getContextPath();
-            eventPublisher.publishEvent(new OnRegistrationCompleteEvent(registered, request.getLocale(), appUrl));
+            User user = userService.registerNewUserAccount(userDto);
+
+            eventPublisher.publishEvent(new OnRegistrationCompleteEvent(user, request.getLocale(), createAppUrl(request)));
 
         } catch (UserAlreadyExistException e) {
-            model.addAttribute("message", "An account for that username/email already exists.");
+            model.addObject("errorMessage", "An account for that username/email already exists.");
             return "registration";
-
         }
 
 //        securityService.autologin(userForm.getUsername(), userForm.getPasswordConfirm());
 
-        return "redirect:/user/dashboard";
+        return "redirect:/user/";
     }
 
-    @GetMapping("/regitrationConfirm")
-    public String confirmRegistration(HttpServletRequest request, Model model, @RequestParam("token") String token) {
+
+
+
+    @GetMapping("/registrationConfirm")
+    public String confirmRegistration(final HttpServletRequest request, final RedirectAttributes redirectAttributes,
+                                      final @RequestParam("token") String token) {
 
         Locale locale = request.getLocale();
 
-        VerificationToken verificationToken = userService.findVerificationTokenByToken(token);
-        if (verificationToken == null) {
-            String message = messageSource.getMessage("auth.message.invalidToken", null, locale);
-            model.addAttribute("errorMessage", message);
-            return "redirect:/badUser" + "?lang=" + locale.getLanguage();
+        try {
+            VerificationToken verificationToken = userService.findVerificationTokenByToken(token);
+
+            User user = verificationToken.getUser();
+
+            if (user.isEnabled()){
+                redirectAttributes.addFlashAttribute("errorMessage",
+                        messageSource.getMessage("auth.message.invalidToken", null, locale));
+                return "redirect:/login";
+            }
+
+            if (verificationToken.getExpiryDate().compareTo(Date.valueOf(LocalDate.now())) <= 0) {
+                redirectAttributes.addFlashAttribute("errorMessage",
+                        messageSource.getMessage("auth.message.expired", null, locale));
+                return "redirect:/login";
+            }
+
+            user.setEnabled(true);
+            userService.saveRegisteredUser(user);
+
+            redirectAttributes.addFlashAttribute("message",
+                    messageSource.getMessage("message.account.enable", null, locale));
+            return "redirect:/login";
+
+        } catch (VerificationTokenNotFountException e) {
+            redirectAttributes.addFlashAttribute("errorMessage",
+                    messageSource.getMessage("auth.message.invalidToken", null, locale));
+            return "redirect:/login";
         }
-
-        User user = verificationToken.getUser();
-
-
-        // TODO: 22.06.2020 исправить message на auth.message.enableUser
-        if (user.isEnabled()){
-            String message = messageSource.getMessage("auth.message.invalidToken", null, locale);
-            model.addAttribute("errorMessage", message);
-            return "redirect:/badUser" + "?lang=" + locale.getLanguage();
-        }
-
-
-
-        Calendar cal = Calendar.getInstance();
-        if ((verificationToken.getExpiryDate().getTime() - cal.getTime().getTime()) <= 0) {
-            String messageValue = messageSource.getMessage("auth.message.expired", null, locale);
-            model.addAttribute("message", messageValue);
-            return "redirect:/badUser" + locale.getLanguage();
-        }
-
-        user.setEnabled(true);
-        userService.saveRegisteredUser(user);
-        return "redirect:/login";
     }
 
     // TODO: 23.06.2020 Дописать message
     @PostMapping(value = "/resetPassword")
-    public String resetPassword(final HttpServletRequest request, final Model model, @RequestParam("email") final String userEmail) {
-        final User user = userService.findUserByEmail(userEmail);
+    public String resetPassword(final HttpServletRequest request, final RedirectAttributes redirectAttributes,
+                                @RequestParam("email") final String userEmail) {
 
-//        if (user == null) {
-//            model.addAttribute("message", messages.getMessage("message.userNotFound", null, request.getLocale()));
-//            return "redirect:/login?lang=" + request.getLocale().getLanguage();
-//        }
 
-        String appUrl = "http://"  + request.getServerName() + ":" + request.getServerPort() + request.getContextPath();
-        eventPublisher.publishEvent(new OnRegistrationCompleteEvent(user, request.getLocale(), appUrl));
 
-//        model.addAttribute("message", messages.getMessage("message.resetPasswordEmail", null, request.getLocale()));
-        return "redirect:/login?lang=" + request.getLocale().getLanguage();
+        eventPublisher.publishEvent(new OnRegistrationCompleteEvent(userEmail, request.getLocale(), createAppUrl(request)));
+
+        redirectAttributes.addFlashAttribute("message",
+                messageSource.getMessage("message.resetPasswordEmail", null, request.getLocale()));
+
+        return "redirect:/login";
+
     }
 
     @GetMapping("/changePassword")
@@ -126,9 +137,18 @@ public class RegistrationController {
 
         Locale locale = request.getLocale();
 
-        Optional<PasswordResetToken> passwordResetTokenByToken = userService.findPasswordResetTokenByToken(token);
+        PasswordResetToken passwordResetTokenByToken = null;
+        try {
+            passwordResetTokenByToken = userService.findPasswordResetTokenByToken(token);
 
-        if (passwordResetTokenByToken.isPresent()) {
+            User user = passwordResetTokenByToken.getUser();
+
+            final Authentication auth = new UsernamePasswordAuthenticationToken(user, null,
+                    userDetailsService.loadUserByUsername(user.getUsername()).getAuthorities());
+            SecurityContextHolder.getContext().setAuthentication(auth);
+
+            return "redirect:/updatePassword";
+        } catch (PasswordResetTokenNotFountException e) {
             String message = messageSource.getMessage("auth.message.invalidToken", null, locale);
             model.addAttribute("errorMessage", message);
             return "redirect:/badUser" + "?lang=" + locale.getLanguage();
@@ -136,7 +156,6 @@ public class RegistrationController {
 
 
 
-        User user = passwordResetTokenByToken.get().getUser();
 
 
         // TODO: 22.06.2020 исправить message на auth.message.enableUser
@@ -152,11 +171,7 @@ public class RegistrationController {
 //            return "redirect:/badUser" + locale.getLanguage();
 //        }
 
-        final Authentication auth = new UsernamePasswordAuthenticationToken(user, null,
-                userDetailsService.loadUserByUsername(user.getUsername()).getAuthorities());
-        SecurityContextHolder.getContext().setAuthentication(auth);
 
-        return "redirect:/updatePassword";
     }
 
     @PostMapping("/savePassword")
@@ -169,4 +184,15 @@ public class RegistrationController {
 //        model.addAttribute("message", messages.getMessage("message.resetPasswordSuc", null, locale));
         return "redirect:/login";
     }
+
+    private String createAppUrl(final HttpServletRequest request){
+        return new StringBuilder()
+                .append("http://")
+                .append(request.getServerName())
+                .append(":")
+                .append(request.getServerPort())
+                .append(request.getContextPath())
+                .toString();
+    }
+
 }

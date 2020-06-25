@@ -1,6 +1,7 @@
 package com.todo.service;
 
 
+import com.todo.exceptions.UserNotFoundException;
 import com.todo.model.Role;
 import com.todo.model.User;
 import com.todo.repository.UserRepository;
@@ -22,8 +23,9 @@ public class UserDetailsServiceImpl implements UserDetailsService{
 
     public UserDetails loadUserByUsername(final String email) throws UsernameNotFoundException {
 
-        final User user = userRepository.findByUsername(email)
-                .orElseThrow(() -> new UsernameNotFoundException("No user found with username: " + email));
+        final User user = userRepository.findByEmail(email).orElseThrow(
+                () -> new UsernameNotFoundException("No user found with username: " + email)
+        );
 
         boolean accountNonExpired = true;
         boolean credentialsNonExpired = true;

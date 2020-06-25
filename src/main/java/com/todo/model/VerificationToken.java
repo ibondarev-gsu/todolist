@@ -14,7 +14,7 @@ import java.time.LocalDate;
 public class VerificationToken {
     private static final int ONE_DAY = 1;
 
-    public VerificationToken(final String token, final User user) {
+    public VerificationToken(final User user, final String token) {
         this.token = token;
         this.user = user;
         this.expiryDate = calculateExpiryDate(ONE_DAY);
@@ -30,7 +30,7 @@ public class VerificationToken {
     @JoinColumn(nullable = false, name = "user_id", foreignKey = @ForeignKey(name = "FK_VERIFY_USER"))
     private User user;
 
-    private Date expiryDate;
+    private Date expiryDate = calculateExpiryDate(ONE_DAY);
 
     private Date calculateExpiryDate(int days) {
         return Date.valueOf(LocalDate.now().plusDays(days));
