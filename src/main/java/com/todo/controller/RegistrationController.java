@@ -38,7 +38,7 @@ import java.util.StringJoiner;
 @Slf4j
 @Controller
 @AllArgsConstructor
-@RequestMapping("/")
+@RequestMapping("/user")
 public class RegistrationController {
 
     private final IUserService userService;
@@ -122,7 +122,7 @@ public class RegistrationController {
 
 
 
-        eventPublisher.publishEvent(new OnRegistrationCompleteEvent(userEmail, request.getLocale(), createAppUrl(request)));
+//        eventPublisher.publishEvent(new OnRegistrationCompleteEvent(userEmail, request.getLocale(), createAppUrl(request)));
 
         redirectAttributes.addFlashAttribute("message",
                 messageSource.getMessage("message.resetPasswordEmail", null, request.getLocale()));

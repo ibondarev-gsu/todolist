@@ -18,9 +18,7 @@ import javax.persistence.EntityManagerFactory;
 import java.util.Properties;
 
 @Configuration
-////Enable annotation driven transaction management
 @EnableTransactionManagement
-////Configure Spring Data JPA and set the base package of the repository interfaces
 @EnableJpaRepositories({"com.todo.repository"})
 public class DataApplicationConfig {
 
@@ -32,21 +30,19 @@ public class DataApplicationConfig {
         this.env = env;
     }
 
-    //Configure the data source bean
     @Bean(name = "dataSource")
     public BasicDataSource dataSource() {
         BasicDataSource dataSource = new BasicDataSource();
-        dataSource.setDriverClassName(env.getProperty("jdbc.driverClassName"));
-        dataSource.setUrl(env.getProperty("jdbc.url"));
-        dataSource.setUsername(env.getProperty("jdbc.username"));
-        dataSource.setPassword(env.getProperty("jdbc.password"));
+        dataSource.setDriverClassName(env.getProperty("spring.datasource.driver-class-name"));
+        dataSource.setUrl(env.getProperty("spring.datasource.url"));
+        dataSource.setUsername(env.getProperty("spring.datasource.username"));
+        dataSource.setPassword(env.getProperty("spring.datasource.password"));
 
         logger.debug("BasicDataSource: {}", dataSource);
 
         return dataSource;
     }
 
-    // Configure the entity manager factory bean
     @Bean(name = "entityManagerFactory")
     public LocalContainerEntityManagerFactoryBean entityManagerFactory() {
         LocalContainerEntityManagerFactoryBean entityManagerFactory = new LocalContainerEntityManagerFactoryBean();
@@ -64,7 +60,6 @@ public class DataApplicationConfig {
         return entityManagerFactory;
     }
 
-    // Configure the transaction manager bean
     @Bean(name = "transactionManager")
     public PlatformTransactionManager transactionManager(EntityManagerFactory emf) {
         JpaTransactionManager transactionManager = new JpaTransactionManager();
@@ -77,9 +72,9 @@ public class DataApplicationConfig {
 
     private Properties hibernateProperties() {
         Properties properties = new Properties();
-        properties.setProperty("hibernate.dialect", env.getProperty("hibernate.dialect"));
-        properties.setProperty("hibernate.show_sql", env.getProperty("hibernate.show_sql"));
-        properties.setProperty("hibernate.hbm2ddl.auto", env.getProperty("hibernate.hbm2ddl.auto"));
+        properties.setProperty("hibernate.dialect", env.getProperty("spring.jpa.properties.hibernate.dialect"));
+        properties.setProperty("hibernate.show_sql", env.getProperty("spring.jpa.show-sql"));
+        properties.setProperty("hibernate.hbm2ddl.auto", env.getProperty("spring.jpa.hibernate.ddl-auto"));
 
         return properties;
     }

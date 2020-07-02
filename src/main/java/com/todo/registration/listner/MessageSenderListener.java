@@ -54,21 +54,21 @@ public class MessageSenderListener implements Runnable {
     // TODO: 25.06.2020 message
     @EventListener(OnResetPasswordEvent.class)
     public void resetPassword(OnResetPasswordEvent event) {
-        User user = event.getUser();
-
-        String token = UUID.randomUUID().toString();
-
-        userService.createPasswordResetToken(user, token);
-
-        String confirmationUrl = event.getAppUrl() + "/changePassword??token=" + token;
-//        String message = messages.getMessage("message.regSucc", null, event.getLocale());
-
-
-        email.setTo(user.getEmail());
-        email.setSubject("Reset password");
-        email.setText(confirmationUrl);
-
-        new Thread(this).start();
+////        User user = event.getUser();
+//
+//        String token = UUID.randomUUID().toString();
+//
+//        userService.createPasswordResetToken(user, token);
+//
+//        String confirmationUrl = event.getAppUrl() + "/changePassword??token=" + token;
+////        String message = messages.getMessage("message.regSucc", null, event.getLocale());
+//
+//
+//        email.setTo(user.getEmail());
+//        email.setSubject("Reset password");
+//        email.setText(confirmationUrl);
+//
+//        new Thread(this).start();
     }
 
 
