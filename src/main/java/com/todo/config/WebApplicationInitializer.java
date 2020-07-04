@@ -31,8 +31,6 @@ public class WebApplicationInitializer extends AbstractAnnotationConfigDispatche
 //        //Security Filter
         DelegatingFilterProxy filterProxy = new DelegatingFilterProxy("springSecurityFilterChain");
 
-        return new Filter[]{encodingFilter,
-                filterProxy
-        };
+        return new Filter[]{encodingFilter, filterProxy};
     }
 }

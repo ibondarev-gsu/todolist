@@ -5,6 +5,7 @@ import lombok.*;
 import javax.persistence.*;
 import java.sql.Date;
 import java.sql.Timestamp;
+import java.time.LocalDateTime;
 import java.util.Calendar;
 
 
@@ -14,14 +15,12 @@ import java.util.Calendar;
 @Setter @Getter
 @AllArgsConstructor @NoArgsConstructor
 public class PasswordResetToken {
+    private static final int ONE_DAY = 1;
 
-    private static final int EXPIRATION = 60 * 24;
-
-
-    public PasswordResetToken(final String token, final User user) {
+    public PasswordResetToken(final User user, final String token) {
         this.token = token;
         this.user = user;
-        this.expiryDate = calculateExpiryDate(EXPIRATION);
+        this.expiryDate = LocalDateTime.now().plusDays(1);
     }
 
     @Id
@@ -35,18 +34,15 @@ public class PasswordResetToken {
     @JoinColumn(nullable = false, name = "user_id")
     private User user;
 
-    private Date expiryDate;
+    @Builder.Default
+    private LocalDateTime expiryDate = LocalDateTime.now().plusDays(1);
 
-    private Date calculateExpiryDate(final int expiryTimeInMinutes) {
-        Calendar cal = Calendar.getInstance();
-        cal.setTime(new Timestamp(cal.getTime().getTime()));
-        cal.add(Calendar.MINUTE, expiryTimeInMinutes);
-        return new Date(cal.getTime().getTime());
+    public boolean isExpired(){
+        return expiryDate.compareTo(LocalDateTime.now()) < 0;
     }
 
     public void updateToken(final String token) {
         this.token = token;
-        this.expiryDate = calculateExpiryDate(EXPIRATION);
+        this.expiryDate = LocalDateTime.now().plusDays(1);
     }
-
 }

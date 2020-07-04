@@ -20,8 +20,8 @@ import java.util.concurrent.atomic.AtomicReference;
 @Component("customAuthenticationFailureHandler")
 public class CustomAuthenticationFailureHandler extends SimpleUrlAuthenticationFailureHandler {
 
-    private MessageSource messages;
-    private LocaleResolver localeResolver;
+    private final MessageSource messages;
+    private final LocaleResolver localeResolver;
 
     public CustomAuthenticationFailureHandler(@Qualifier("messageSource") MessageSource messages, LocaleResolver localeResolver) {
         this.messages = messages;
@@ -34,7 +34,6 @@ public class CustomAuthenticationFailureHandler extends SimpleUrlAuthenticationF
                                         final AuthenticationException exception) throws IOException, ServletException {
 
         setDefaultFailureUrl("/login?error");
-
 
         super.onAuthenticationFailure(request, response, exception);
 

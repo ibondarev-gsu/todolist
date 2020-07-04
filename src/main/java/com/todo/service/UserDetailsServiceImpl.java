@@ -15,40 +15,40 @@ import org.springframework.stereotype.Service;
 
 import java.util.*;
 
-@Service
-@AllArgsConstructor
-public class UserDetailsServiceImpl implements UserDetailsService{
+//@Service
+//@AllArgsConstructor
+public class UserDetailsServiceImpl {
 
-    private final UserRepository userRepository;
+//    private final UserRepository userRepository;
+//
+//    public UserDetails loadUserByUsername(final String email) throws UsernameNotFoundException {
+//
+//        final User user = userRepository.findByEmail(email).orElseThrow(
+//                () -> new UsernameNotFoundException("No user found with username: " + email)
+//        );
+//
+//        boolean accountNonExpired = true;
+//        boolean credentialsNonExpired = true;
+//        boolean accountNonLocked = true;
+//
+//        return  org.springframework.security.core.userdetails.User.builder()
+//                .username(user.getUsername())
+//                .password(user.getPassword())
+//                .disabled(user.isEnabled())
+//                .accountExpired(accountNonExpired)
+//                .credentialsExpired(credentialsNonExpired)
+//                .accountLocked(accountNonLocked)
+//                .authorities(Arrays.asList(new SimpleGrantedAuthority("ROLE_" + "USER")))
+//                .build();
+//    }
 
-    public UserDetails loadUserByUsername(final String email) throws UsernameNotFoundException {
-
-        final User user = userRepository.findByEmail(email).orElseThrow(
-                () -> new UsernameNotFoundException("No user found with username: " + email)
-        );
-
-        boolean accountNonExpired = true;
-        boolean credentialsNonExpired = true;
-        boolean accountNonLocked = true;
-
-        return  org.springframework.security.core.userdetails.User.builder()
-                .username(user.getUsername())
-                .password(user.getPassword())
-                .disabled(user.isEnabled())
-                .accountExpired(accountNonExpired)
-                .credentialsExpired(credentialsNonExpired)
-                .accountLocked(accountNonLocked)
-                .authorities(Arrays.asList(new SimpleGrantedAuthority("ROLE_" + "USER")))
-                .build();
-    }
-
-    private static List<GrantedAuthority> getAuthorities (Collection<Role> roles) {
-        List<GrantedAuthority> authorities = new ArrayList<>();
-        for (Role role : roles) {
-            authorities.add(new SimpleGrantedAuthority("ROLE_" + role.getName()));
-        }
-        return authorities;
-    }
+//    private static List<GrantedAuthority> getAuthorities (Collection<Role> roles) {
+//        List<GrantedAuthority> authorities = new ArrayList<>();
+//        for (Role role : roles) {
+//            authorities.add(new SimpleGrantedAuthority("ROLE_" + role.getName()));
+//        }
+//        return authorities;
+//    }
 
 
 //    @Override

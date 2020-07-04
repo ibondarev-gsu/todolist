@@ -6,25 +6,28 @@ import com.todo.exceptions.UserAlreadyExistException;
 import com.todo.exceptions.UserNotFoundException;
 import com.todo.exceptions.VerificationTokenNotFountException;
 import com.todo.model.PasswordResetToken;
+import com.todo.model.Role;
 import com.todo.model.User;
 
 import com.todo.model.VerificationToken;
 import com.todo.repository.PasswordResetTokenRepository;
 import com.todo.repository.UserRepository;
 import com.todo.repository.VerificationTokenRepository;
-import com.todo.service.interfaces.IUserService;
+import com.todo.service.interfaces.UserService;
 import lombok.AllArgsConstructor;
+import org.springframework.context.annotation.DependsOn;
+import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.time.LocalDateTime;
-import java.util.Arrays;
+import java.util.Collections;
 
-@Service("userServiceImpl")
+@Service
 @Transactional(readOnly = true)
 @AllArgsConstructor
-public class UserServiceImpl implements IUserService {
+public class UserServiceImpl implements UserService {
 
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
@@ -32,13 +35,18 @@ public class UserServiceImpl implements IUserService {
     private final PasswordResetTokenRepository passwordResetTokenRepository;
 
     @Override
-    public User findByUsername(String username) throws UserNotFoundException {
+    public User findUserByUsername(String username) throws UserNotFoundException {
         return userRepository.findByUsername(username).orElseThrow(UserNotFoundException::new);
+    }
+
+    public UserDetails loadUserByUsername(final String email) throws UsernameNotFoundException {
+        return  userRepository.findByEmail(email).orElseThrow(
+                () -> new UsernameNotFoundException("No user found with username: " + email));
     }
 
     @Override
     @Transactional
-    public User registerNewUserAccount(final UserDto userDto) throws UserAlreadyExistException {
+    public User createAccount(final UserDto userDto) throws UserAlreadyExistException {
 
         final String email = userDto.getEmail();
 
@@ -53,29 +61,21 @@ public class UserServiceImpl implements IUserService {
                 .firstName(userDto.getFirstName())
                 .lastName(userDto.getLastName())
                 .middleName(userDto.getMiddleName())
-                .roles(Arrays.asList())
+                .roles(Collections.singleton(Role.USER))
                 .build()
         );
     }
 
     @Override
     @Transactional
-    public void createVerificationToken(final User user, final String token) {
-        verificationTokenRepository.save(new VerificationToken(user, token));
+    public void saveVerificationToken(final User user, final String token) {
+        verificationTokenRepository.save(VerificationToken.builder().user(user).token(token).build());
     }
 
     @Override
-    public void createPasswordResetToken(User user, String token) {
-        PasswordResetToken passwordResetToken = new PasswordResetToken(token, user);
-        passwordResetTokenRepository.save(passwordResetToken);
-    }
-
-    @Override
-    public User findUserByVerificationToken(final String verificationToken) throws VerificationTokenNotFountException {
-        return verificationTokenRepository
-                .findByToken(verificationToken)
-                .orElseThrow(VerificationTokenNotFountException::new)
-                .getUser();
+    @Transactional
+    public void savePasswordResetToken(User user, String token) {
+        passwordResetTokenRepository.save(PasswordResetToken.builder().user(user).token(token).build());
     }
 
     @Override
@@ -86,21 +86,36 @@ public class UserServiceImpl implements IUserService {
     }
 
     @Override
-    public PasswordResetToken findPasswordResetTokenByToken(String token) throws PasswordResetTokenNotFountException{
-        return passwordResetTokenRepository.findByToken(token).orElseThrow(PasswordResetTokenNotFountException::new);
+    public PasswordResetToken findPasswordResetTokenByToken(final String passwordResetToken) throws PasswordResetTokenNotFountException{
+        return passwordResetTokenRepository
+                .findByToken(passwordResetToken)
+                .orElseThrow(PasswordResetTokenNotFountException::new);
     }
 
     @Override
     @Transactional
-    public void saveRegisteredUser(final User user) {
+    public void saveUser(final User user) {
         userRepository.save(user);
     }
 
     @Override
     @Transactional
-    public void changeUserPassword(final User user, final String password) {
+    public void saveUserPassword(final User user, final String password) {
         user.setPassword(passwordEncoder.encode(password));
         userRepository.save(user);
+    }
+
+    @Override
+    @Transactional
+    public void deleteUserAndVerificationToken(User user, VerificationToken token) {
+        verificationTokenRepository.delete(token);
+        userRepository.delete(user);
+    }
+
+    @Override
+    @Transactional
+    public void deletePasswordResetToken(PasswordResetToken token) {
+        passwordResetTokenRepository.delete(token);
     }
 
     @Override

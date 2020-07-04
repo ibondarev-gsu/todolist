@@ -10,6 +10,7 @@ import java.io.Serializable;
 import java.time.LocalDateTime;
 import java.util.Calendar;
 import java.util.Collection;
+import java.util.Set;
 
 
 @Entity
@@ -45,20 +46,32 @@ public class User implements UserDetails, Serializable {
 
     @Column(name = "enabled")
     @Builder.Default
-    private Boolean isEnabled = false;
+    private Boolean enabled = false;
+
+    @Builder.Default
+    private Boolean isCredentialsNonExpired = true;
+    @Builder.Default
+    private Boolean isAccountNonLocked = true;
+    @Builder.Default
+    private Boolean isAccountNonExpired = true;
+
 
     @Column(name = "created")
     @Builder.Default
     private LocalDateTime created = LocalDateTime.now();
 
 
-    @ManyToMany
-    @JoinTable(
-            name = "users_roles",
-            joinColumns = @JoinColumn(
-                    name = "user_id", referencedColumnName = "id"),
-            inverseJoinColumns = @JoinColumn(
-                    name = "role_id", referencedColumnName = "id"))
+//    @ManyToMany
+//    @JoinTable(
+//            name = "users_roles",
+//            joinColumns = @JoinColumn(
+//                    name = "user_id", referencedColumnName = "id"),
+//            inverseJoinColumns = @JoinColumn(
+//                    name = "role_id", referencedColumnName = "id"))
+
+    @ElementCollection(targetClass = Role.class, fetch = FetchType.EAGER)
+    @CollectionTable(name = "users_roles", joinColumns = @JoinColumn(name = "user_id"))
+    @Enumerated(EnumType.STRING)
     private Collection<Role> roles;
 
     /**
@@ -68,7 +81,7 @@ public class User implements UserDetails, Serializable {
      */
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
-        return null;
+        return roles;
     }
 
     /**
@@ -80,7 +93,7 @@ public class User implements UserDetails, Serializable {
      */
     @Override
     public boolean isAccountNonExpired() {
-        return false;
+        return isAccountNonExpired;
     }
 
     /**
@@ -91,7 +104,7 @@ public class User implements UserDetails, Serializable {
      */
     @Override
     public boolean isAccountNonLocked() {
-        return false;
+        return isAccountNonLocked;
     }
 
     /**
@@ -103,7 +116,7 @@ public class User implements UserDetails, Serializable {
      */
     @Override
     public boolean isCredentialsNonExpired() {
-        return false;
+        return isCredentialsNonExpired;
     }
 
     /**
@@ -114,6 +127,6 @@ public class User implements UserDetails, Serializable {
      */
     @Override
     public boolean isEnabled() {
-        return isEnabled;
+        return enabled;
     }
 }

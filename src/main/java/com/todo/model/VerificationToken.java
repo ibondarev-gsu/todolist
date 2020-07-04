@@ -5,6 +5,7 @@ import lombok.*;
 import javax.persistence.*;
 import java.sql.Date;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "verification_token")
@@ -17,7 +18,7 @@ public class VerificationToken {
     public VerificationToken(final User user, final String token) {
         this.token = token;
         this.user = user;
-        this.expiryDate = calculateExpiryDate(ONE_DAY);
+        this.expiryDate = LocalDateTime.now().plusDays(1);
     }
 
     @Id
@@ -27,17 +28,18 @@ public class VerificationToken {
     private String token;
 
     @OneToOne(targetEntity = User.class, fetch = FetchType.EAGER)
-    @JoinColumn(nullable = false, name = "user_id", foreignKey = @ForeignKey(name = "FK_VERIFY_USER"))
+    @JoinColumn(nullable = false, name = "user_id")
     private User user;
 
-    private Date expiryDate = calculateExpiryDate(ONE_DAY);
+    @Builder.Default
+    private LocalDateTime expiryDate = LocalDateTime.now().plusDays(1);
 
-    private Date calculateExpiryDate(int days) {
-        return Date.valueOf(LocalDate.now().plusDays(days));
+    public boolean isExpired(){
+        return expiryDate.compareTo(LocalDateTime.now()) < 0;
     }
 
     public void updateToken(final String token) {
         this.token = token;
-        this.expiryDate = calculateExpiryDate(ONE_DAY);
+        this.expiryDate = LocalDateTime.now().plusDays(1);
     }
 }

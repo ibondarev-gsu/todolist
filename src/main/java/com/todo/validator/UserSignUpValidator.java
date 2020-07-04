@@ -2,7 +2,7 @@ package com.todo.validator;
 
 
 import com.todo.model.User;
-import com.todo.service.interfaces.IUserService;
+import com.todo.service.interfaces.UserService;
 import org.springframework.stereotype.Component;
 import org.springframework.validation.Errors;
 import org.springframework.validation.Validator;
@@ -10,9 +10,9 @@ import org.springframework.validation.Validator;
 @Component("userSignUpValidator")
 public class UserSignUpValidator implements Validator {
 
-    private final IUserService userService;
+    private final UserService userService;
 
-    public UserSignUpValidator(IUserService userService) {
+    public UserSignUpValidator(UserService userService) {
         this.userService = userService;
     }
 

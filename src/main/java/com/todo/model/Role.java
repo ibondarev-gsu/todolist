@@ -7,36 +7,39 @@ import org.springframework.security.core.GrantedAuthority;
 import javax.persistence.*;
 import java.util.Collection;
 
-@Entity
-@Table(name = "role")
-@Builder(toBuilder = true)
-@Setter @Getter
-@AllArgsConstructor @NoArgsConstructor
-public class Role implements GrantedAuthority {
+//@Entity
+//@Table(name = "role")
+//@Builder(toBuilder = true)
+//@Setter @Getter
+//@AllArgsConstructor @NoArgsConstructor
+public enum Role implements GrantedAuthority{
 
-    public Role(String name) {
-        this.name = name;
-    }
+    USER, ADMIN;
+//    public Role(String name) {
+//        this.name = name;
+//    }
+//
 
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "id")
-    private Long id;
 
-    @Column(name = "name")
-    private String name;
+//    @Id
+//    @GeneratedValue(strategy = GenerationType.IDENTITY)
+//    @Column(name = "id")
+//    private Long id;
+//
+//    @Column(name = "name")
+//    private String name;
+//
+//    @ManyToMany(mappedBy = "roles")
+//    private Collection<User> users;
 
-    @ManyToMany(mappedBy = "roles")
-    private Collection<User> users;
-
-    @ManyToMany
-    @JoinTable(
-            name = "roles_privileges",
-            joinColumns = @JoinColumn(
-                    name = "role_id", referencedColumnName = "id"),
-            inverseJoinColumns = @JoinColumn(
-                    name = "privilege_id", referencedColumnName = "id"))
-    private Collection<Privilege> privileges;
+//    @ManyToMany
+//    @JoinTable(
+//            name = "roles_privileges",
+//            joinColumns = @JoinColumn(
+//                    name = "role_id", referencedColumnName = "id"),
+//            inverseJoinColumns = @JoinColumn(
+//                    name = "privilege_id", referencedColumnName = "id"))
+//    private Collection<Privilege> privileges;
 
     /**
      * If the <code>GrantedAuthority</code> can be represented as a <code>String</code>
@@ -56,6 +59,6 @@ public class Role implements GrantedAuthority {
      */
     @Override
     public String getAuthority() {
-        return name;
+        return name();
     }
 }

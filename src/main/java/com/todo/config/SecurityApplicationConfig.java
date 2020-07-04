@@ -1,5 +1,6 @@
 package com.todo.config;
 
+import com.todo.service.interfaces.UserService;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -8,8 +9,6 @@ import org.springframework.security.config.annotation.authentication.builders.Au
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configuration.WebSecurityConfigurerAdapter;
-import org.springframework.security.core.userdetails.UserDetailsService;
-import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.authentication.AuthenticationFailureHandler;
 
@@ -18,13 +17,16 @@ import org.springframework.security.web.authentication.AuthenticationFailureHand
 public class SecurityApplicationConfig extends WebSecurityConfigurerAdapter
 {
 
-    private final UserDetailsService userDetailsService;
+    private final UserService userService;
     private final AuthenticationFailureHandler failureHandler;
+    private final PasswordEncoder passwordEncoder;
 
-    public SecurityApplicationConfig(UserDetailsService userDetailsService,
-                                     @Qualifier("customAuthenticationFailureHandler") AuthenticationFailureHandler failureHandler) {
-        this.userDetailsService = userDetailsService;
+    public SecurityApplicationConfig(UserService userService,
+                                     @Qualifier("customAuthenticationFailureHandler") AuthenticationFailureHandler failureHandler,
+                                     PasswordEncoder passwordEncoder) {
+        this.userService = userService;
         this.failureHandler = failureHandler;
+        this.passwordEncoder = passwordEncoder;
     }
 
 
@@ -49,7 +51,7 @@ public class SecurityApplicationConfig extends WebSecurityConfigurerAdapter
                 // по которым будет определятся доступ к ресурсам и остальным данным
                 .authorizeRequests()
                     .antMatchers("/resources/**").permitAll()
-                    .antMatchers( "/login", "/registration", "/registrationConfirm", "/badUser", "/forgotPassword").permitAll()
+                    .antMatchers( "/login", "/registration", "/active", "/resetPassword", "/forgotPassword", "/changePassword", "/updatePassword").permitAll()
                 .anyRequest().authenticated()
                 .and()
 
@@ -73,15 +75,15 @@ public class SecurityApplicationConfig extends WebSecurityConfigurerAdapter
     }
 
     @Override
-    protected void configure(AuthenticationManagerBuilder auth) throws Exception {
+    protected void configure(AuthenticationManagerBuilder auth) {
         auth.authenticationProvider(daoAuthenticationProvider());
     }
 
     @Bean
     public DaoAuthenticationProvider daoAuthenticationProvider() {
         DaoAuthenticationProvider provider = new DaoAuthenticationProvider();
-        provider.setPasswordEncoder(passwordEncoder());
-        provider.setUserDetailsService(userDetailsService);
+        provider.setPasswordEncoder(passwordEncoder);
+        provider.setUserDetailsService(userService);
         return provider;
     }
 
@@ -98,9 +100,6 @@ public class SecurityApplicationConfig extends WebSecurityConfigurerAdapter
 //        return authProvider;
 //    }
 //
-    @Bean(name = "bCryptPasswordEncoder")
-    public PasswordEncoder passwordEncoder() {
-        return new BCryptPasswordEncoder(11);
-    }
+
 
 }
