@@ -1,11 +1,13 @@
 package com.todo.config;
 
+import com.todo.model.Role;
 import com.todo.service.interfaces.UserService;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
 import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
+import org.springframework.security.config.annotation.method.configuration.EnableGlobalMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configuration.WebSecurityConfigurerAdapter;
@@ -14,6 +16,10 @@ import org.springframework.security.web.authentication.AuthenticationFailureHand
 
 @Configuration
 @EnableWebSecurity
+@EnableGlobalMethodSecurity(
+        prePostEnabled = true,
+        securedEnabled = true,
+        jsr250Enabled = true)
 public class SecurityApplicationConfig extends WebSecurityConfigurerAdapter
 {
 
@@ -51,24 +57,23 @@ public class SecurityApplicationConfig extends WebSecurityConfigurerAdapter
                 // по которым будет определятся доступ к ресурсам и остальным данным
                 .authorizeRequests()
                     .antMatchers("/resources/**").permitAll()
-                    .antMatchers( "/login", "/registration", "/active", "/resetPassword", "/forgotPassword", "/changePassword", "/updatePassword").permitAll()
+                    .antMatchers( "/login", "/registration", "/active", "/resetPassword", "/forgotPassword", "/changePassword", "/updatePassword").anonymous()
+                    .antMatchers("/user/home").hasAuthority(Role.USER.getAuthority())
                 .anyRequest().authenticated()
                 .and()
 
                 .formLogin()
 //                // указываем страницу с формой логина
-                    .loginPage("/login").permitAll()
+                    .loginPage("/login")
 //                    // указываем action с формы логина
                     .loginProcessingUrl("/login")
-                    .defaultSuccessUrl("/hello")
+                    .defaultSuccessUrl("/user/home")
                     .failureHandler(failureHandler)
 //                    .failureUrl("/login?error")
                     .usernameParameter("username")
                     .passwordParameter("password")
-                    .permitAll()
                 .and()
                 .logout()
-                    .permitAll()
                     .logoutUrl("/logout")
                     .logoutSuccessUrl("/login?logout")
                     .invalidateHttpSession(true);

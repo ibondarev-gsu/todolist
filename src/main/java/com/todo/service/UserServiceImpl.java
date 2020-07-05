@@ -40,7 +40,7 @@ public class UserServiceImpl implements UserService {
     }
 
     public UserDetails loadUserByUsername(final String email) throws UsernameNotFoundException {
-        return  userRepository.findByEmail(email).orElseThrow(
+        return userRepository.findByEmail(email).orElseThrow(
                 () -> new UsernameNotFoundException("No user found with username: " + email));
     }
 
@@ -69,24 +69,28 @@ public class UserServiceImpl implements UserService {
     @Override
     @Transactional
     public void saveVerificationToken(final User user, final String token) {
-        verificationTokenRepository.save(VerificationToken.builder().user(user).token(token).build());
+        user.setVerificationToken(VerificationToken.builder().token(token).build());
+        userRepository.save(user);
     }
 
     @Override
     @Transactional
     public void savePasswordResetToken(User user, String token) {
-        passwordResetTokenRepository.save(PasswordResetToken.builder().user(user).token(token).build());
+        user.setPasswordResetToken(PasswordResetToken.builder().token(token).build());
+        userRepository.save(user);
     }
 
     @Override
-    public VerificationToken findVerificationTokenByToken(final String verificationToken) throws VerificationTokenNotFountException {
+    public VerificationToken findVerificationTokenByToken(final String verificationToken)
+            throws VerificationTokenNotFountException {
         return verificationTokenRepository
                 .findByToken(verificationToken)
                 .orElseThrow(VerificationTokenNotFountException::new);
     }
 
     @Override
-    public PasswordResetToken findPasswordResetTokenByToken(final String passwordResetToken) throws PasswordResetTokenNotFountException{
+    public PasswordResetToken findPasswordResetTokenByToken(final String passwordResetToken)
+            throws PasswordResetTokenNotFountException{
         return passwordResetTokenRepository
                 .findByToken(passwordResetToken)
                 .orElseThrow(PasswordResetTokenNotFountException::new);

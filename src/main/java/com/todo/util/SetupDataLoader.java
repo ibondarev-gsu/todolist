@@ -1,9 +1,20 @@
 package com.todo.util;
 
+import com.todo.model.Role;
+import com.todo.model.User;
+import com.todo.repository.UserRepository;
+import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.context.ApplicationListener;
+import org.springframework.context.event.ContextRefreshedEvent;
+import org.springframework.stereotype.Component;
 
+import java.util.Collection;
+import java.util.Collections;
+
+//@Slf4j
 //@Component
-@Slf4j
+//@AllArgsConstructor
 public class SetupDataLoader
 //        implements ApplicationListener<ContextRefreshedEvent>
 {
@@ -34,34 +45,34 @@ public class SetupDataLoader
      * @param event the event to respond to
      */
 //    @Override
-//    public void onApplicationEvent(final ContextRefreshedEvent event) {
-//        if (alreadySetup) return;
-//
+    public void onApplicationEvent(final ContextRefreshedEvent event) {
+
+
 //        Privilege readPrivilege = createPrivilegeIfNotFound("READ_PRIVILEGE");
 //        Privilege writePrivilege = createPrivilegeIfNotFound("WRITE_PRIVILEGE");
-//
+
 //        List<Privilege> adminPrivileges = Arrays.asList(readPrivilege, writePrivilege);
 //        List<Privilege> userPrivileges = Arrays.asList(readPrivilege);
-//
+
 //        Role adminRole = createRoleIfNotFound("ROLE_ADMIN", adminPrivileges);
 //        Role userRole = createRoleIfNotFound("ROLE_USER", userPrivileges);
-//
-////        Role adminRole = roleRepository.findByName("ROLE_ADMIN");
-//
-//        User user = new User();
-//        user.setUsername("Admin");
-//        user.setPassword("Admin");
-//        user.setEmail("test@test.com");
-//        user.setRoles(Arrays.asList(adminRole));
-////        user.setEnabled(true);
-//
+
+//        Role adminRole = roleRepository.findByName("ROLE_ADMIN");
+
+
 //        log.debug("{}", user);
-//
-//        userRepository.save(user);
-//
+
+//        userRepository.save(User.builder()
+//                .username("Admin")
+//                .password("Admin")
+//                .email("vania.bondarev@yandex.ru")
+//                .enabled(true)
+//                .roles(Collections.singleton(Role.ADMIN))
+//                .build());
+
 //        alreadySetup = true;
-//    }
-//
+    }
+
 //    private Role createRoleIfNotFound(String name, Collection<Privilege> privileges) {
 //        Role role = roleRepository.findByName(name);
 //        if (role == null) {

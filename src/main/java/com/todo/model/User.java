@@ -60,6 +60,14 @@ public class User implements UserDetails, Serializable {
     @Builder.Default
     private LocalDateTime created = LocalDateTime.now();
 
+    @OneToOne(orphanRemoval = true, cascade = CascadeType.ALL)
+    @JoinColumn(name = "reset_token_id", referencedColumnName = "id")
+    private PasswordResetToken passwordResetToken;
+
+    @OneToOne(orphanRemoval = true, cascade = CascadeType.ALL)
+    @JoinColumn(name = "verification_token_id", referencedColumnName = "id")
+    private VerificationToken verificationToken;
+
 
 //    @ManyToMany
 //    @JoinTable(

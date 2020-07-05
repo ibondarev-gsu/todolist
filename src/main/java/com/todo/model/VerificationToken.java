@@ -27,8 +27,7 @@ public class VerificationToken {
 
     private String token;
 
-    @OneToOne(targetEntity = User.class, fetch = FetchType.EAGER)
-    @JoinColumn(nullable = false, name = "user_id")
+    @OneToOne(mappedBy = "verificationToken")
     private User user;
 
     @Builder.Default
@@ -36,10 +35,5 @@ public class VerificationToken {
 
     public boolean isExpired(){
         return expiryDate.compareTo(LocalDateTime.now()) < 0;
-    }
-
-    public void updateToken(final String token) {
-        this.token = token;
-        this.expiryDate = LocalDateTime.now().plusDays(1);
     }
 }

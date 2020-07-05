@@ -17,7 +17,6 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
@@ -32,12 +31,16 @@ import java.util.Locale;
 @Slf4j
 @Controller
 @AllArgsConstructor
-@RequestMapping("/")
 public class RegistrationController {
 
     private final UserService userService;
     private final MessageSource messageSource;
     private final MailSenderService mailSenderService;
+
+    @GetMapping
+    public String home(){
+        return "redirect:/user/home";
+    }
 
     @GetMapping(value = "/registration")
     public String showRegistrationForm(Model model) {
@@ -45,9 +48,13 @@ public class RegistrationController {
         return "registration";
     }
 
+    // TODO: 05.07.2020 Messages
     @PostMapping(value = "/registration")
-    public String registerUserAccount(@ModelAttribute("user") @Valid UserDto userDto, BindingResult bindingResult,
-                                      ModelAndView model, HttpServletRequest request){
+    public String registerUserAccount(final @ModelAttribute("user") @Valid UserDto userDto,
+                                      final BindingResult bindingResult,
+                                      final RedirectAttributes redirectAttributes,
+                                      final ModelAndView modelAndView,
+                                      final Locale locale){
 
         if (bindingResult.hasErrors()) {
             return "registration";
@@ -56,12 +63,12 @@ public class RegistrationController {
         try {
             User user = userService.createAccount(userDto);
             mailSenderService.sendActiveCode(user);
+            redirectAttributes.addFlashAttribute("message", "Check your email bro");
+            return "redirect:/login";
         } catch (UserAlreadyExistException e) {
-            model.addObject("errorMessage", "An account for that username/email already exists.");
+            modelAndView.addObject("errorMessage", "An account for that username/email already exists.");
             return "registration";
         }
-
-        return "redirect:/user/";
     }
 
     @GetMapping("/active")
@@ -108,13 +115,18 @@ public class RegistrationController {
                                 @RequestParam("email") String userEmail) {
 
         try {
+
+
             mailSenderService.sendPasswordResetCode(userService.findUserByEmail(userEmail));
 
-            redirectAttributes.addFlashAttribute("message",
-                    messageSource.getMessage("message.resetPasswordEmail", null, request.getLocale()));
+//            redirectAttributes.addFlashAttribute("message",
+//                    messageSource.getMessage("message.resetPasswordEmail", null, request.getLocale()));
         } catch (UserNotFoundException e) {
 
         }
+
+        redirectAttributes.addFlashAttribute("message",
+                messageSource.getMessage("message.resetPasswordEmail", null, request.getLocale()));
         return "redirect:/login";
     }
 
@@ -147,7 +159,7 @@ public class RegistrationController {
 
             return "updatePassword";
         } catch (PasswordResetTokenNotFountException e) {
-            redirectAttributes.addAttribute("errorMessage",
+            redirectAttributes.addFlashAttribute("errorMessage",
                     messageSource.getMessage("auth.message.invalidToken", null, locale));
             return "redirect:/login";
         }
@@ -168,15 +180,20 @@ public class RegistrationController {
 //    }
 
     // TODO: 04.07.2020 prop
-    @PostMapping("/updatePassword")
+
 //    @PreAuthorize("hasRole('READ_PRIVILEGE')")
-    public String savePassword(final Locale locale,
+    @PostMapping(value = "/updatePassword")
+    public String savePassword(
+            final Locale locale,
                                final @AuthenticationPrincipal User user,
                                final RedirectAttributes redirectAttributes,
-                               final @RequestParam("password")  String password) {
+                               final @RequestParam("password")  String password
+    ) {
+
+//        User user = (User)SecurityContextHolder.getContext().getAuthentication().getPrincipal();
 
         userService.saveUserPassword(user, password);
-        redirectAttributes.addAttribute("message",
+        redirectAttributes.addFlashAttribute("message",
                 messageSource.getMessage("message.resetPasswordSuc", null, locale));
         return "redirect:/login";
     }
