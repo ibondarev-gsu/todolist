@@ -16,7 +16,7 @@
         <spring-security.version>5.2.1.RELEASE</spring-security.version>
         <spring-data-jpa.version>2.2.4.RELEASE</spring-data-jpa.version>
         <hibernate.version>5.2.1.Final</hibernate.version>
-        <hibernate-validator.version>5.2.1.Final</hibernate-validator.version>
+        <hibernate-validator.version>5.3.6.Final</hibernate-validator.version>
         <commons-dbcp.version>1.4</commons-dbcp.version>
         <commons-beanutils.version>1.9.3</commons-beanutils.version>
         <junit.version>4.12</junit.version>
